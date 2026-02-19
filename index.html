@@ -50,6 +50,13 @@
             cursor: pointer;
             font-size: 16px;
             margin-top: 10px;
+            margin-right: 10px;
+        }
+        #submitRandomTempBtn {
+            background-color: #FF9800;
+        }
+        #submitRandomTempBtn:hover {
+            background-color: #e68900;
         }
         button:hover {
             background-color: #45a049;
@@ -81,6 +88,7 @@
         <h1>Gas Reading Submission</h1>
         
         <button id="submitBtn" onclick="sendDataToSupabase()">Submit Reading</button>
+        <button id="submitRandomTempBtn" onclick="sendDataWithRandomTemp()">Submit with Random Temp (40-45)</button>
         
         <div id="message" class="message"></div>
     </div>
@@ -147,6 +155,63 @@
                 // Re-enable button
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Submit Reading';
+            }
+        }
+        
+        async function sendDataWithRandomTemp() {
+            const messageDiv = document.getElementById('message');
+            const submitBtn = document.getElementById('submitRandomTempBtn');
+            
+            // Hardcoded data with random temperature between 40-45
+            const gas_type = "CO2";
+            const value = Math.floor(Math.random() * 6) + 40; // Random between 40-45
+            const location = "SVCE";
+            
+            // Disable button while submitting
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            
+            try {
+                console.log('Attempting to insert:', {
+                    gas_type: gas_type,
+                    value: value,
+                    location: location
+                });
+
+                const { data, error } = await supabaseClient
+                    .from('gas_readings')
+                    .insert([
+                        { 
+                            gas_type: gas_type,
+                            value: value,
+                            location: location
+                        }
+                    ])
+                    .select();
+                
+                if (error) {
+                    console.error('Full error details:', error);
+                    throw error;
+                }
+                
+                showMessage(`Gas reading submitted successfully with temperature: ${value}!`, 'success');
+                
+                console.log('Inserted data:', data);
+                
+            } catch (error) {
+                let errorMsg = error.message;
+                if (error.hint) {
+                    errorMsg += ' - ' + error.hint;
+                }
+                if (error.details) {
+                    errorMsg += ' - ' + error.details;
+                }
+                showMessage('Error: ' + errorMsg, 'error');
+                console.error('Full error object:', error);
+            } finally {
+                // Re-enable button
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit with Random Temp (40-45)';
             }
         }
         
